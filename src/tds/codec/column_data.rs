@@ -111,14 +111,14 @@ impl<'a> ColumnData<'a> {
 #[derive(Debug, Clone, Copy)]
 pub enum ReadTyMode {
     /// Fixed-size type with given size
-    FixedSize(usize),
+    FixedSize(u64),
     /// Partially length-prefixed type
     Plp,
 }
 
 impl ReadTyMode {
     /// Determine the mode automatically from size
-    pub fn auto(size: usize) -> Self {
+    pub fn auto(size: u64) -> Self {
         if size < 0xffff {
             ReadTyMode::FixedSize(size)
         } else {
@@ -149,7 +149,7 @@ impl ReadTyState {
 #[derive(Clone, Debug, Copy)]
 pub struct VariableLengthContext {
     ty: VarLenType,
-    len: usize,
+    len: u64,
     collation: Option<Collation>,
 }
 
@@ -159,7 +159,7 @@ pub struct VariableLengthPrecisionContext {
 }
 
 impl VariableLengthContext {
-    pub fn new(ty: VarLenType, len: usize, collation: Option<Collation>) -> Self {
+    pub fn new(ty: VarLenType, len: u64, collation: Option<Collation>) -> Self {
         Self { ty, len, collation }
     }
 }
@@ -255,7 +255,7 @@ impl<'a> ColumnData<'a> {
                 match rlen {
                     0 => ColumnData::Time(None),
                     _ => {
-                        let time = Time::decode(src, len as usize, rlen as usize).await?;
+                        let time = Time::decode(src, len, rlen as u64).await?;
                         ColumnData::Time(Some(time))
                     }
                 }
@@ -267,7 +267,7 @@ impl<'a> ColumnData<'a> {
                 match rlen {
                     0 => ColumnData::DateTime2(None),
                     rlen => {
-                        let dt = DateTime2::decode(src, len as usize, rlen as usize - 3).await?;
+                        let dt = DateTime2::decode(src, len, rlen as u64 - 3).await?;
                         ColumnData::DateTime2(Some(dt))
                     }
                 }
@@ -298,7 +298,7 @@ impl<'a> ColumnData<'a> {
 
     async fn decode_xml<R>(
         src: &mut R,
-        len: usize,
+        len: u64,
         schema: Option<Arc<XmlSchema>>,
     ) -> crate::Result<ColumnData<'a>>
     where
@@ -518,7 +518,7 @@ impl<'a> ColumnData<'a> {
     async fn decode_variable_string<R>(
         src: &mut R,
         ty: VarLenType,
-        len: usize,
+        len: u64,
     ) -> crate::Result<Option<String>>
     where
         R: SqlReadBytes + Unpin,
@@ -551,7 +551,7 @@ impl<'a> ColumnData<'a> {
 
     async fn decode_big_varchar<R>(
         src: &mut R,
-        len: usize,
+        len: u64,
         collation: Option<Collation>,
     ) -> crate::Result<ColumnData<'static>>
     where
@@ -607,7 +607,7 @@ impl<'a> ColumnData<'a> {
         Ok(res)
     }
 
-    async fn decode_binary<R>(src: &mut R, len: usize) -> crate::Result<ColumnData<'static>>
+    async fn decode_binary<R>(src: &mut R, len: u64) -> crate::Result<ColumnData<'static>>
     where
         R: SqlReadBytes + Unpin,
     {

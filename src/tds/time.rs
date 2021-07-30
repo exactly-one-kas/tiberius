@@ -256,7 +256,7 @@ impl Time {
         })
     }
 
-    pub(crate) async fn decode<R>(src: &mut R, n: usize, rlen: usize) -> crate::Result<Time>
+    pub(crate) async fn decode<R>(src: &mut R, n: u64, rlen: u64) -> crate::Result<Time>
     where
         R: SqlReadBytes + Unpin,
     {
@@ -347,11 +347,11 @@ impl DateTime2 {
         self.time
     }
 
-    pub(crate) async fn decode<R>(src: &mut R, n: usize, rlen: usize) -> crate::Result<Self>
+    pub(crate) async fn decode<R>(src: &mut R, n: u64, rlen: u64) -> crate::Result<Self>
     where
         R: SqlReadBytes + Unpin,
     {
-        let time = Time::decode(src, n, rlen as usize).await?;
+        let time = Time::decode(src, n, rlen).await?;
 
         let mut bytes = [0u8; 4];
         src.read_exact(&mut bytes[..3]).await?;
@@ -410,11 +410,11 @@ impl DateTimeOffset {
         self.offset
     }
 
-    pub(crate) async fn decode<R>(src: &mut R, n: usize, rlen: u8) -> crate::Result<Self>
+    pub(crate) async fn decode<R>(src: &mut R, n: u64, rlen: u8) -> crate::Result<Self>
     where
         R: SqlReadBytes + Unpin,
     {
-        let datetime2 = DateTime2::decode(src, n, rlen as usize).await?;
+        let datetime2 = DateTime2::decode(src, n, rlen as u64).await?;
         let offset = src.read_i16_le().await?;
 
         Ok(Self { datetime2, offset })

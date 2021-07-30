@@ -4,16 +4,16 @@ use std::{convert::TryFrom, sync::Arc};
 #[derive(Debug)]
 pub enum TypeInfo {
     FixedLen(FixedLenType),
-    VarLenSized(VarLenType, usize, Option<Collation>),
+    VarLenSized(VarLenType, u64, Option<Collation>),
     VarLenSizedPrecision {
         ty: VarLenType,
-        size: usize,
+        size: u64,
         precision: u8,
         scale: u8,
     },
     Xml {
         schema: Option<Arc<XmlSchema>>,
-        size: usize,
+        size: u64,
     },
 }
 
@@ -143,14 +143,14 @@ impl TypeInfo {
 
                 Ok(TypeInfo::Xml {
                     schema,
-                    size: 0xfffffffffffffffe_usize,
+                    size: 0xfffffffffffffffe_u64,
                 })
             }
             Ok(ty) => {
                 let len = match ty {
                     #[cfg(feature = "tds73")]
                     VarLenType::Timen | VarLenType::DatetimeOffsetn | VarLenType::Datetime2 => {
-                        src.read_u8().await? as usize
+                        src.read_u8().await? as u64
                     }
                     #[cfg(feature = "tds73")]
                     VarLenType::Daten => 3,
@@ -161,15 +161,15 @@ impl TypeInfo {
                     | VarLenType::Numericn
                     | VarLenType::Guid
                     | VarLenType::Money
-                    | VarLenType::Datetimen => src.read_u8().await? as usize,
+                    | VarLenType::Datetimen => src.read_u8().await? as u64,
                     VarLenType::NChar
                     | VarLenType::BigChar
                     | VarLenType::NVarchar
                     | VarLenType::BigVarChar
                     | VarLenType::BigBinary
-                    | VarLenType::BigVarBin => src.read_u16_le().await? as usize,
+                    | VarLenType::BigVarBin => src.read_u16_le().await? as u64,
                     VarLenType::Image | VarLenType::Text | VarLenType::NText => {
-                        src.read_u32_le().await? as usize
+                        src.read_u32_le().await? as u64
                     }
                     _ => todo!("not yet implemented for {:?}", ty),
                 };
